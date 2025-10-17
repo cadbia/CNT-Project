@@ -1,0 +1,3 @@
+[2025-10-17 12:55:08] Peer 1003 started. pieceCount=1280
+[2025-10-17 12:57:45] Connect to 1001 failed: Connection reset
+[2025-10-17 12:57:45] Connect to 1002 failed: Bad handshake header
