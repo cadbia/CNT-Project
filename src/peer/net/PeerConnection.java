@@ -58,25 +58,6 @@ public class PeerConnection implements Closeable {
         writer.start();
     }
 
-    public void sendHandshake(int selfId) throws IOException {
-        Handshake hs = new Handshake(selfId);
-        socket.getOutputStream().write(hs.toBytes());
-        socket.getOutputStream().flush();
-    }
-
-    public int recvHandshake() throws IOException {
-        byte[] buf = new byte[Handshake.HEADER.length + Handshake.ZERO_BYTES + 4];
-        int off = 0;
-        InputStream in = socket.getInputStream();
-        while (off < buf.length) {
-            int r = in.read(buf, off, buf.length - off);
-            if (r < 0) throw new IOException("EOF during handshake");
-            off += r;
-        }
-        Handshake hs = Handshake.parse(buf);
-        return hs.peerId;
-    }
-
     public void send(Message m) {
         outbound.offer(m);
     }

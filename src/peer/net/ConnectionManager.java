@@ -5,6 +5,7 @@ import peer.config.PeerInfo;
 import peer.config.PeerRow;
 import peer.core.PieceManager;
 import peer.log.PeerLogger;
+import peer.protocol.Handshake;
 import peer.protocol.Message;
 import peer.protocol.MessageType;
 
@@ -45,15 +46,19 @@ public class ConnectionManager {
 
         // Connect to earlier peers
         for (PeerRow r : info.earlierThan(selfId)) {
+            Socket s = null;
+            PeerConnection pc = null;
             try {
-                Socket s = new Socket(r.host, r.port);
-                PeerConnection pc = new PeerConnection(r.peerId, s, logger);
-                pc.sendHandshake(selfId);
-                int remote = pc.recvHandshake();
+                s = new Socket(r.host, r.port);
+                // Perform handshake before creating PeerConnection
+                int remote = performClientHandshake(s, r.peerId);
                 if (remote != r.peerId) {
-                    pc.close();
+                    logger.info("Connect to " + r.peerId + " failed: Peer ID mismatch");
+                    s.close();
                     continue;
                 }
+                // Create PeerConnection after successful handshake
+                pc = new PeerConnection(r.peerId, s, logger);
                 conns.put(r.peerId, pc);
                 logger.connectedTo(r.peerId);
 
@@ -64,6 +69,12 @@ public class ConnectionManager {
                 }
             } catch (Exception e) {
                 logger.info("Connect to " + r.peerId + " failed: " + e.getMessage());
+                // Clean up on failure
+                if (pc != null) {
+                    try { pc.close(); } catch (Exception ignored) {}
+                } else if (s != null && !s.isClosed()) {
+                    try { s.close(); } catch (Exception ignored) {}
+                }
             }
         }
     }
@@ -72,11 +83,10 @@ public class ConnectionManager {
         while (!server.isClosed()) {
             try {
                 Socket s = server.accept();
-                // read handshake first
-                PeerConnection pc = new PeerConnection(-1, s, logger);
-                int remoteId = pc.recvHandshake();
-                // respond
-                pc.sendHandshake(selfId);
+                // Perform handshake before creating PeerConnection
+                int remoteId = performServerHandshake(s);
+                // Now create PeerConnection with the correct remote ID
+                PeerConnection pc = new PeerConnection(remoteId, s, logger);
                 conns.put(remoteId, pc);
                 logger.connectedFrom(remoteId);
 
@@ -89,6 +99,46 @@ public class ConnectionManager {
                 if (!server.isClosed()) logger.info("Accept failed: " + e.getMessage());
             }
         }
+    }
+
+    private int performServerHandshake(Socket s) throws IOException {
+        // Read incoming handshake from client
+        byte[] buf = new byte[Handshake.HEADER.length + Handshake.ZERO_BYTES + 4];
+        int off = 0;
+        java.io.InputStream in = s.getInputStream();
+        while (off < buf.length) {
+            int r = in.read(buf, off, buf.length - off);
+            if (r < 0) throw new IOException("EOF during handshake");
+            off += r;
+        }
+        peer.protocol.Handshake hs = peer.protocol.Handshake.parse(buf);
+        
+        // Send handshake response
+        peer.protocol.Handshake response = new peer.protocol.Handshake(selfId);
+        s.getOutputStream().write(response.toBytes());
+        s.getOutputStream().flush();
+        
+        return hs.peerId;
+    }
+
+    private int performClientHandshake(Socket s, int expectedPeerId) throws IOException {
+        // Send handshake first (client initiates)
+        peer.protocol.Handshake outgoing = new peer.protocol.Handshake(selfId);
+        s.getOutputStream().write(outgoing.toBytes());
+        s.getOutputStream().flush();
+        
+        // Read handshake response from server
+        byte[] buf = new byte[Handshake.HEADER.length + Handshake.ZERO_BYTES + 4];
+        int off = 0;
+        java.io.InputStream in = s.getInputStream();
+        while (off < buf.length) {
+            int r = in.read(buf, off, buf.length - off);
+            if (r < 0) throw new IOException("EOF during handshake");
+            off += r;
+        }
+        peer.protocol.Handshake hs = peer.protocol.Handshake.parse(buf);
+        
+        return hs.peerId;
     }
 
     public void stop() throws IOException {

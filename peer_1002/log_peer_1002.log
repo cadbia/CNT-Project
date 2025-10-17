@@ -1,3 +1,4 @@
-[2025-10-17 12:54:59] Peer 1002 started. pieceCount=1280
-[2025-10-17 12:57:45] is connected from Peer 1003.
-[2025-10-17 12:57:45] Connect to 1001 failed: EOF during handshake
+[2025-10-17 13:11:00] Peer 1002 started. pieceCount=1280
+[2025-10-17 13:11:00] make a connection to Peer 1001.
+[2025-10-17 13:11:03] is connected from Peer 1003.
+[2025-10-17 15:45:31] Shutdown requested.
