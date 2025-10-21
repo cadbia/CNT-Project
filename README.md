@@ -1,14 +1,14 @@
-# CNT4007 P2P — Midpoint Skeleton
+# Project midpoint check
 
-This is a **compilable** midpoint skeleton that sets up the project structure, config loaders, protocol primitives, logging, core state,
-and networking scaffolding. It compiles cleanly and can be extended to full functionality.
+made for the project midpoint check. 
+Reqs: at least 500 lines and compileable.
 
-## Build
+## To build
 ```bash
 javac -d out $(find src -name '*.java')
 ```
 
-## Run (example)
+## To Run (example)
 ```bash
 # Terminal 1
 java -cp out peer.PeerProcess 1001
