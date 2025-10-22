@@ -14,7 +14,6 @@ public class Handshake {
     public byte[] toBytes() {
         byte[] b = new byte[HEADER.length + ZERO_BYTES + 4];
         System.arraycopy(HEADER, 0, b, 0, HEADER.length);
-        // ten zero bytes already default to 0
         ByteUtils.putInt(b, b.length - 4, peerId);
         return b;
     }
