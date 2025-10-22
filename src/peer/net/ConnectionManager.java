@@ -39,7 +39,7 @@ public class ConnectionManager {
         this.logger = logger;
     }
 
-    public void start() throws IOException {
+    public void start() throws IOException { 
         server = new ServerSocket(selfPort);
         acceptor.submit(this::acceptLoop);
 
@@ -48,26 +48,25 @@ public class ConnectionManager {
             PeerConnection pc = null;
             try {
                 s = new Socket(r.host, r.port);
-                // Perform handshake before creating PeerConnection
+                // Here we perform the handshake before creating the PeerConnection
                 int remote = performClientHandshake(s, r.peerId);
                 if (remote != r.peerId) {
                     logger.info("Connect to " + r.peerId + " failed: Peer ID mismatch");
                     s.close();
                     continue;
                 }
-                // Create PeerConnection after successful handshake
+                // Here we create the PeerConnection after a successful handshake
                 pc = new PeerConnection(r.peerId, s, logger);
                 conns.put(r.peerId, pc);
                 logger.connectedTo(r.peerId);
 
-                // Midpoint: send a BITFIELD if we have any pieces
+                // Here is the midpoint and we send a BITFIELD if we have any pieces
                 if (pm.getPieceCount() > 0) {
                     byte[] bf = pm.getBitfield().toBytes();
                     pc.send(Message.of(MessageType.BITFIELD, bf));
                 }
             } catch (Exception e) {
                 logger.info("Connect to " + r.peerId + " failed: " + e.getMessage());
-                // Failure clean up
                 if (pc != null) {
                     try { pc.close(); } catch (Exception ignored) {}
                 } else if (s != null && !s.isClosed()) {
@@ -81,14 +80,14 @@ public class ConnectionManager {
         while (!server.isClosed()) {
             try {
                 Socket s = server.accept();
-                // Perform handshake before creating PeerConnection
+                // Here we perform the handshake before creating the PeerConnection
                 int remoteId = performServerHandshake(s);
-                // Create PeerConnection with the correct remote ID
+                // Now we create PeerConnection with the correct remote ID
                 PeerConnection pc = new PeerConnection(remoteId, s, logger);
                 conns.put(remoteId, pc);
                 logger.connectedFrom(remoteId);
 
-                // Midpoint: send our bitfield
+                // Here is the midpoint where we send our bitfield
                 if (pm.getPieceCount() > 0) {
                     byte[] bf = pm.getBitfield().toBytes();
                     pc.send(Message.of(MessageType.BITFIELD, bf));
@@ -100,7 +99,7 @@ public class ConnectionManager {
     }
 
     private int performServerHandshake(Socket s) throws IOException {
-        // Read incoming handshake from client
+        // Here we read the incoming handshake from the client
         byte[] buf = new byte[Handshake.HEADER.length + Handshake.ZERO_BYTES + 4];
         int off = 0;
         java.io.InputStream in = s.getInputStream();
@@ -111,7 +110,7 @@ public class ConnectionManager {
         }
         peer.protocol.Handshake hs = peer.protocol.Handshake.parse(buf);
         
-        // Send handshake response
+        // Now here we send the handshake response
         peer.protocol.Handshake response = new peer.protocol.Handshake(selfId);
         s.getOutputStream().write(response.toBytes());
         s.getOutputStream().flush();
@@ -120,12 +119,12 @@ public class ConnectionManager {
     }
 
     private int performClientHandshake(Socket s, int expectedPeerId) throws IOException {
-        // Send handshake first (client initiates)
+        // First we send handshake that the client initiates
         peer.protocol.Handshake outgoing = new peer.protocol.Handshake(selfId);
         s.getOutputStream().write(outgoing.toBytes());
         s.getOutputStream().flush();
         
-        // Read handshake response from server
+        // Now we read the handshake response from the server
         byte[] buf = new byte[Handshake.HEADER.length + Handshake.ZERO_BYTES + 4];
         int off = 0;
         java.io.InputStream in = s.getInputStream();
