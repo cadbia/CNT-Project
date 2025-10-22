@@ -7,7 +7,6 @@ public class PieceManager {
     private final int pieceCount;
     private final int pieceSize;
     private final String fileName;
-    // simple in-memory backing for midpoint
     private final byte[][] pieces;
 
     public PieceManager(CommonConfig cfg, String workDir, boolean hasFile) {
@@ -19,7 +18,7 @@ public class PieceManager {
         if (hasFile) {
             for (int i = 0; i < pieceCount; i++) {
                 int size = (i == pieceCount - 1) ? cfg.lastPieceSize() : pieceSize;
-                this.pieces[i] = new byte[size]; // dummy bytes
+                this.pieces[i] = new byte[size];
             }
         }
     }
