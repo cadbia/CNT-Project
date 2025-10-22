@@ -53,7 +53,6 @@ public class ChokeManager {
         unchoked.clear();
         unchoked.addAll(chosen);
         logger.changedPreferredNeighbors(chosen);
-        // In full implementation you would send choke/unchoke messages here.
     }
 
     private void optimistic() {
@@ -62,7 +61,6 @@ public class ChokeManager {
         if (!ints.isEmpty()) {
             int pick = ints.get(rnd.nextInt(ints.size()));
             logger.changedOptimisticNeighbor(pick);
-            // In full implementation you would send the unchoke message here.
         }
     }
 }
