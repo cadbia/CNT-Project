@@ -37,8 +37,7 @@ public class PeerConnection implements Closeable {
                 while (!Thread.currentThread().isInterrupted()) {
                     Message m = Message.parse(in);
                     if (m == null) break;
-                    // Midpoint: simply log receipt; ConnectionManager will not dispatch handlers yet.
-                    // In a fuller design, you'd push to a per-connection queue/callback.
+                    // Here is the midpoint and we simply log receipt and the ConnectionManager will not dispatch handlers yet
                 }
             } catch (Exception ignored) {}
         }, "reader-" + remotePeerId);
