@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 public class Message {
-    public final int length; // excludes the 4-byte length
+    public final int length; 
     public final byte type;
     public final byte[] payload;
 
