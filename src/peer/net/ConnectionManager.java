@@ -40,11 +40,9 @@ public class ConnectionManager {
     }
 
     public void start() throws IOException {
-        // Start server
         server = new ServerSocket(selfPort);
         acceptor.submit(this::acceptLoop);
 
-        // Connect to earlier peers
         for (PeerRow r : info.earlierThan(selfId)) {
             Socket s = null;
             PeerConnection pc = null;
@@ -69,7 +67,7 @@ public class ConnectionManager {
                 }
             } catch (Exception e) {
                 logger.info("Connect to " + r.peerId + " failed: " + e.getMessage());
-                // Clean up on failure
+                // Failure clean up
                 if (pc != null) {
                     try { pc.close(); } catch (Exception ignored) {}
                 } else if (s != null && !s.isClosed()) {
@@ -85,7 +83,7 @@ public class ConnectionManager {
                 Socket s = server.accept();
                 // Perform handshake before creating PeerConnection
                 int remoteId = performServerHandshake(s);
-                // Now create PeerConnection with the correct remote ID
+                // Create PeerConnection with the correct remote ID
                 PeerConnection pc = new PeerConnection(remoteId, s, logger);
                 conns.put(remoteId, pc);
                 logger.connectedFrom(remoteId);
