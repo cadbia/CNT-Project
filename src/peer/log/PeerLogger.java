@@ -38,6 +38,8 @@ public class PeerLogger implements AutoCloseable {
     public void have(int id, int pieceIdx) { info("received the 'have' message from " + id + " for the piece " + pieceIdx + "."); }
     public void downloadedPiece(int id, int pieceIdx, int haveCount) { info("has downloaded the piece " + pieceIdx + " from " + id + ". Now the number of pieces it has is " + haveCount + "."); }
     public void completed() { info("has downloaded the complete file."); }
+    public void remoteCompleted(int remoteId) { info("confirms Peer " + remoteId + " has downloaded the complete file."); }
+    public void terminated() { info("terminates because all peers now have the complete file."); }
 
     @Override
     public void close() throws Exception {

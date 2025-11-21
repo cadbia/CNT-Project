@@ -1,9 +1,8 @@
 package peer.net;
 
 import peer.log.PeerLogger;
-import peer.protocol.Handshake;
+import peer.net.MessageHandler;
 import peer.protocol.Message;
-import peer.protocol.MessageType;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -12,19 +11,23 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PeerConnection implements Closeable {
     public final int remotePeerId;
     private final Socket socket;
     private final PeerLogger logger;
+    private final MessageHandler handler;
     private final BlockingQueue<Message> outbound = new LinkedBlockingQueue<>();
     private Thread reader;
     private Thread writer;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    public PeerConnection(int remotePeerId, Socket socket, PeerLogger logger) throws IOException {
+    public PeerConnection(int remotePeerId, Socket socket, PeerLogger logger, MessageHandler handler) throws IOException {
         this.remotePeerId = remotePeerId;
         this.socket = socket;
         this.logger = logger;
+        this.handler = handler;
         startThreads();
     }
 
@@ -37,10 +40,13 @@ public class PeerConnection implements Closeable {
                 while (!Thread.currentThread().isInterrupted()) {
                     Message m = Message.parse(in);
                     if (m == null) break;
-                    // Midpoint: simply log receipt; ConnectionManager will not dispatch handlers yet.
-                    // In a fuller design, you'd push to a per-connection queue/callback.
+                    handler.onMessage(remotePeerId, m);
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ex) {
+                logger.info("reader for " + remotePeerId + " closed: " + ex.getMessage());
+            } finally {
+                handler.onDisconnect(remotePeerId);
+            }
         }, "reader-" + remotePeerId);
         writer = new Thread(() -> {
             try {
@@ -49,7 +55,9 @@ public class PeerConnection implements Closeable {
                     out.write(m.toBytes());
                     out.flush();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ex) {
+                logger.info("writer for " + remotePeerId + " closed: " + ex.getMessage());
+            }
         }, "writer-" + remotePeerId);
 
         reader.setDaemon(true);
@@ -59,11 +67,14 @@ public class PeerConnection implements Closeable {
     }
 
     public void send(Message m) {
-        outbound.offer(m);
+        if (!closed.get()) {
+            outbound.offer(m);
+        }
     }
 
     @Override
     public void close() throws IOException {
+        if (!closed.compareAndSet(false, true)) return;
         try { if (reader != null) reader.interrupt(); } catch (Exception ignored) {}
         try { if (writer != null) writer.interrupt(); } catch (Exception ignored) {}
         socket.close();
