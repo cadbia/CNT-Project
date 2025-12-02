@@ -15,13 +15,15 @@
 - made sure that the "HAVE" messages are correct
 - sanity-checked multi-peer downloads to confirm pieces rotate evenly
 
-3. Dimitri - worked with logging
+3. Dimitri
+- worked with logging
 - implemented PeerLogger
 - made lifecycle hooks so the logs will show all events as intended
 - had run.sh spin up peers, making sure they had clean directories and consistent arguments
 - worked on the sample log segments for the demo
 
-4. Mia - worked on configuration and managing the code
+4. Mia
+- worked on configuration and managing the code
 - managed Common.cfg and PeerInfo.cfg
 - kept all port and ID vals in sync with what was needed for dedmo
 - wrote the README.md, and created outline for the demo script
