@@ -1,26 +1,37 @@
-# CNT4007 P2P — Contribution Notes
+## Contribution Notes
 
-## Caden B — Networking & Protocol Flow
-- rewrote `ConnectionManager` to manage client/server handshakes cleanly
-- wired the initial bitfield broadcast and verified peers react with INTERESTED/NOT INTERESTED as expected
+1. Caden
+— did work on the protocol flows
+- fixed ConnectionManage to facilitate the client and server handshakes
+- initial bitfield broadcast
+- made sure that peers would react with "INTERESTED" or "NOT INTERESTED" when they were supposed to
 - tuned preferred and optimistic choke scheduling so logs line up with `Common.cfg`
-
-## Carl S — Storage & Piece Scheduling
-- built the disk-backed `PieceManager` and keeps the bitfield state in sync with the filesystem
-- manages outstanding piece requests to avoid duplicates and makes sure HAVE messages fan out correctly
+  
+2. Carl
+— worked on storage piece scheduling
+- built PieceManager
+- made sure the bitfield state was in sync with the filesystem
+- handled outstanding piece requests to avoid any duplicates
+- made sure that the "HAVE" messages are correct
 - sanity-checked multi-peer downloads to confirm pieces rotate evenly
 
-## Dimitri D — Logging & Automation
-- implemented `PeerLogger` and the lifecycle hooks so every rubric event shows up in the logs
-- scripted `run.sh` to spin up peers with clean directories and consistent arguments
-- pulled sample log segments for the video so graders can follow along without guessing
+3. Dimitri D
+- worked with logging
+- implemented PeerLogger
+- made lifecycle hooks so the logs will show all events as intended
+- had run.sh spin up peers, making sure they had clean directories and consistent arguments
+- worked on the sample log segments for the demo
 
-## Mia B — Configs, Docs, and QA
-- owns `Common.cfg`/`PeerInfo.cfg`, keeps port/ID values in sync with what we demo
-- authored `README.md`, `DEMO_SCRIPT.md`, and this contributions note in plain language
-- ran full-system smoke tests after each major change and recorded the terminal evidence we cite
+4. Mia B
+- worked on configuration and managing the code
+- managed Common.cfg and PeerInfo.cfg
+- kept all port and ID vals in sync with what was needed for dedmo
+- wrote the README.md, and created outline for the demo script
+- ran accuaracy checks in the code after any major change
+- recorded the terminal evidence
 
-## Teamwide Work
+What we did together:
 - paired on choke/unchoke timing until the intervals matched the spec
-- rotated code reviews before merging anything into `master`
-- rehearsed and recorded the 5–8 minute walkthrough outlined in `README.md`
+- insured push/pull requests were in 
+- practiced the script for the demo
+- added additional details to script for the video demo
