@@ -59,18 +59,18 @@ public class ConnectionManager implements MessageHandler {
     public ConnectionManager(int selfId, int selfPort, PeerInfo info, CommonConfig common, PieceManager pm, PeerLogger logger) {
         this.selfId = selfId;
         this.selfPort = selfPort;
-    this.info = info;
-    this.common = common;
-    this.pm = pm;
-    this.logger = logger;
-    this.acceptor = Executors.newSingleThreadExecutor(r -> new Thread(r, "acceptor-" + selfId));
-    this.inboundExecutor = Executors.newCachedThreadPool(r -> new Thread(r, "msg-" + selfId + "-" + r.hashCode()));
-    this.chokeManager = new ChokeManager(common.unchokingInterval, common.optimisticUnchokingInterval,
-                this::handlePreferredTick, this::handleOptimisticTick);
-    this.selfCompletionLogged = new AtomicBoolean(pm.isComplete());
-        if (pm.isComplete()) {
-            completedPeers.add(selfId);
-        }
+        this.info = info;
+        this.common = common;
+        this.pm = pm;
+        this.logger = logger;
+        this.acceptor = Executors.newSingleThreadExecutor(r -> new Thread(r, "acceptor-" + selfId));
+        this.inboundExecutor = Executors.newCachedThreadPool(r -> new Thread(r, "msg-" + selfId + "-" + r.hashCode()));
+        this.chokeManager = new ChokeManager(common.unchokingInterval, common.optimisticUnchokingInterval, 
+            this::handlePreferredTick, this::handleOptimisticTick);
+        this.selfCompletionLogged = new AtomicBoolean(pm.isComplete());
+            if (pm.isComplete()) {
+                completedPeers.add(selfId);
+            }
     }
 
     public void start() throws IOException {
@@ -142,6 +142,7 @@ public class ConnectionManager implements MessageHandler {
         session.send(bitfield);
     }
 
+    // send message based on interest
     private void evaluateInterest(PeerSession session) {
         synchronized (session) {
             boolean interesting = hasInterestingPieces(session);
@@ -155,6 +156,7 @@ public class ConnectionManager implements MessageHandler {
         }
     }
 
+    // check if peer has interesting pieces
     private boolean hasInterestingPieces(PeerSession session) {
         Bitfield remote = session.remoteBitfield;
         Bitfield local = pm.getBitfield();
@@ -216,6 +218,7 @@ public class ConnectionManager implements MessageHandler {
         }
     }
 
+    // handles interested and not_interested
     private void handleInterest(PeerSession session, boolean interested) {
         synchronized (session) {
             session.remoteInterested = interested;
@@ -246,12 +249,13 @@ public class ConnectionManager implements MessageHandler {
     }
 
     private void handleRequest(PeerSession session, byte[] payload) {
-        int piece = ByteUtils.getInt(payload, 0);
+        int piece = ByteUtils.getInt(payload, 0); // piece ID
         boolean allowed;
         synchronized (session) {
             allowed = !session.weChokeRemote && pm.hasPiece(piece);
         }
         if (allowed) {
+            // read piece and send to peer
             byte[] data = pm.readPiece(piece);
             if (data != null) {
                 byte[] buff = new byte[4 + data.length];
@@ -349,6 +353,12 @@ public class ConnectionManager implements MessageHandler {
         }
     }
 
+    /*
+     * This method selects a peer session as the optimistic neighbor from the available candidates.
+     * If there are no candidates, the optimistic neighbor is set to null.
+     * If candidates are available, one is randomly selected and set as the optimistic neighbor,
+     * and the choke state is applied accordingly.
+     */
     private void handleOptimisticTick() {
         synchronized (stateLock) {
             List<PeerSession> candidates = sessions.values().stream()

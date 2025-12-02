@@ -51,7 +51,7 @@ public class PeerConnection implements Closeable {
         writer = new Thread(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    Message m = outbound.take();
+                    Message m = outbound.take(); // ensure thread safety
                     out.write(m.toBytes());
                     out.flush();
                 }

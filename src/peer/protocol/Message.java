@@ -18,6 +18,7 @@ public class Message {
         this.payload = payload == null ? new byte[0] : payload;
     }
 
+    // factory method
     public static Message of(MessageType t, byte[] payload) {
         int len = 1 + (payload == null ? 0 : payload.length);
         return new Message(len, t.code, payload);
@@ -33,6 +34,7 @@ public class Message {
         return out;
     }
 
+    // factory method to parse from socket stream
     public static Message parse(InputStream in) throws IOException {
         DataInputStream din = new DataInputStream(in);
         int len;
